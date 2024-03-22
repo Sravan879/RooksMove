@@ -1,0 +1,16 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "The game will be played on an 8x8 chessboard with a single rook piece. Two players take turns to move the rook either left or down, with the objective of reaching the bottom-left corner before their opponent.",
+  "main": "gameServer.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon gameServer.js"
+  },
+  "author": "Sravan",
+  "dependencies": {
+    "express": "^4.18.2",
+    "nodemon": "^3.0.1",
+    "socket.io": "^4.7.2"
+  }
+}
