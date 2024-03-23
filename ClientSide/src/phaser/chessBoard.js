@@ -6,13 +6,26 @@ class ChessBoard extends Phaser.Scene {
   }
 
   preload() {
-    this.load.svg('rook', '/images/rook.svg', { width: 40, height: 40 });
-    this.load.svg('rookDown', '/images/rook_down.svg', { width: 40, height: 40 });
-    this.load.svg('rookLeft', '/images/rook_left.svg', { width: 40, height: 40 });
-    this.load.svg('finish', '/images/finish.svg', { width: 50, height: 50 });
-    this.load.svg('opp_timer', '/images/opp_timer.svg', { width: 60, height: 60 });
-    this.load.svg('timer', '/images/timer.svg', { width: 60, height: 60 });
-    this.load.svg('rectangle', '/images/rectangle.svg', { width: 30, height: 30 });
+    // Preload all necessary images
+    this.load.svg("rook", "/images/rook.svg", { width: 40, height: 40 });
+    this.load.svg("rookDown", "/images/rook_down.svg", {
+      width: 40,
+      height: 40,
+    });
+    this.load.svg("rookLeft", "/images/rook_left.svg", {
+      width: 40,
+      height: 40,
+    });
+    this.load.svg("finish", "/images/finish.svg", { width: 50, height: 50 });
+    this.load.svg("opp_timer", "/images/opp_timer.svg", {
+      width: 75,
+      height: 75,
+    });
+    this.load.svg("timer", "/images/timer.svg", { width: 55, height: 55 });
+    this.load.svg("rectangle", "/images/rectangle.svg", {
+      width: 30,
+      height: 30,
+    });
   }
 
   init(data) {
@@ -21,21 +34,24 @@ class ChessBoard extends Phaser.Scene {
   }
 
   create() {
-
+    // Define necessary variables and constants
     let player = null;
     const sq = 41.77;
 
+    // Function to highlight valid moves for the rook
     function highlightValidMoves() {
+      // Check if the rook is active
       if (isRookActive) {
         // Create an array to store the square sprites
         const squares = [];
     
         // Loop through the squares and highlight them
         for (let x = rookPositionX - 1; x >= 0; x--) {
+          // Calculate square position
           const squareX = 20.42 + x * sq + sq / 2;
           const squareY = 166.42 + rookPositionY * sq + sq / 2;
     
-          // Create a square sprite with breathing animation
+          // Create and configure square sprite with breathing animation
           const square = scene.add.sprite(squareX, squareY, "rectangle");
           square.setScale(0.75); // Initial scale for the breathing effect
           
@@ -103,16 +119,12 @@ class ChessBoard extends Phaser.Scene {
       }
     }
     
+    // Function to toggle the activity state of the rook
     function toggleRookActivity() {
       isRookActive = !isRookActive;
-      // Add or remove animation, or change sprite appearance to indicate activity
-      if (isRookActive) {
-        rook.setAlpha(0.7); // Make the rook slightly transparent to indicate it's active
-      } else {
-        rook.setAlpha(1); // Reset the rook's transparency
-      }
     }
 
+    // Function to determine movement direction based on old and new positions
     function getMovementDirection(oldX, oldY, newX, newY) {
     if (newX < oldX) {
         return "left";
@@ -121,6 +133,7 @@ class ChessBoard extends Phaser.Scene {
       }
     }
 
+    // Function to get the appropriate image key for the rook based on direction
     function getRookImageKey(direction) {
       // Choose the appropriate image key based on the direction
       switch (direction) {
@@ -185,40 +198,24 @@ class ChessBoard extends Phaser.Scene {
         .setOrigin(0.5, 0.5);
     }
 
+    // Add rotating finish image
     const finish = this.add.image(20.42+sq/2, 166.42+7.5*sq, 'finish');
     this.tweens.add({
       targets: finish,
       angle: 360, // Rotate 360 degrees (full circle)
       duration: 1500, // Rotation duration in milliseconds
       repeat: -1, // Repeat indefinitely
-    });
-    const timer1Sprite = this.add.sprite(187.5, 567, "opp_timer");
-    const timeSprite = this.add.sprite(186, 560, "timer")
+    })
+  
+    // Store the scene context
+    const scene = this
+    const timer1Sprite = this.add.sprite(187.5, 582, "opp_timer");
+    const timeSprite = this.add.sprite(186, 80, "timer");
 
-      // Create a graphics object
-      var graphics = this.add.graphics();
-      
-      // Define the variables for the circular ring
-      var x = -100; // x-coordinate of the center
-      var y = 50; // y-coordinate of the center
-      var innerRadius = 60; // Inner radius of the ring
-      var outerRadius = 80; // Outer radius of the ring
-      var startAngle = 0; // Starting angle (in radians)
-      var endAngle = Phaser.Math.PI2; // Ending angle (in radians)
-      var anticlockwise = false; // Direction of drawing (clockwise or anticlockwise)
-      
-      // Draw the circular ring
-      graphics.beginPath();
-      graphics.arc(x, y, innerRadius, startAngle, endAngle, anticlockwise);
-      graphics.arc(x, y, outerRadius, endAngle, startAngle, !anticlockwise);
-      graphics.closePath();
-      graphics.fillStyle(0xFF0000); // Fill color
-      graphics.fillPath();
-    
-    console.log(graphics);
-
+    // Notify server that the client is ready
     this.socket.emit("clientReady");
 
+    // Receive player ID from the server
     this.socket.on("playerId", (playerId) => {
       console.log("Received playerId:", playerId);
       player = playerId;
@@ -229,12 +226,13 @@ class ChessBoard extends Phaser.Scene {
     let rookPositionY = null;
     let isRookActive = false;
 
+    // Handle initial game state received from the server
     this.socket.on("initialGameState", (initialGameState) => {
       const { currentPlayer, rookPosition } = initialGameState;
       rookPositionX = rookPosition.x;
       rookPositionY = rookPosition.y;
 
-      // rook sprite initialization
+      // Initialize rook sprite
       rook = this.add.sprite(
         20.42 + rookPositionX * sq + sq / 2,
         166.42 + rookPositionY * sq + sq / 2,
@@ -246,6 +244,7 @@ class ChessBoard extends Phaser.Scene {
   
         rook.setInteractive(); // Allow interactions for the rook
 
+        // Event listener for rook selection
         rook.on("pointerdown", () => {
           if (!isRookActive) {
             toggleRookActivity(isRookActive);
@@ -255,14 +254,16 @@ class ChessBoard extends Phaser.Scene {
       }
     });
 
+    // Handle updating game state received from the server
     function handleUpdateGameState(updatedGameState) {
       const direction = getMovementDirection(rookPositionX, rookPositionY, updatedGameState.rookPosition.x, updatedGameState.rookPosition.y);
       rookPositionX = updatedGameState.rookPosition.x;
       rookPositionY = updatedGameState.rookPosition.y;
 
+      // Animate rook movement
       animateRook(rook, direction, () => {
-
         if (updatedGameState.currentPlayer === player) {
+          // Enable rook interactivity for the current player
           rook.setInteractive();
           rook.on("pointerdown", () => {
             if (!isRookActive) {
@@ -271,17 +272,20 @@ class ChessBoard extends Phaser.Scene {
             }
           });
         } else {
+          // Disable rook interactivity for the opponent
           rook.disableInteractive();
         }
       });
 
     }
 
+    // Animate rook movement
     function animateRook(rook, direction, onCompleteCallback) {
-      // appropriate image based on the direction
+      // Get the appropriate image based on the direction
       const rookImageKey = getRookImageKey(direction);
       rook.setTexture(rookImageKey);
-      // tween to move the rook to the new position
+      
+      // Tween to move the rook to the new position
       scene.tweens.add({
         targets: rook,
         x: 20.42 + rookPositionX * sq + sq / 2,
@@ -294,30 +298,41 @@ class ChessBoard extends Phaser.Scene {
       });
     }    
     
+    // Receive updated game state from the server
     this.socket.on('updateGameState', (updatedGameState) => {
       handleUpdateGameState(updatedGameState);
     });
 
-    this.socket.on('gameOver', (message) => {
-      let textColor = '#fff'; // Default color
-  
-      // Check if the message contains 'win' or 'lose' to determine the color
-      if (message.toLowerCase().includes('win')) {
-        textColor = '#00ff00'; // Green color for win
-      } else if (message.toLowerCase().includes('lost')) {
-        textColor = '#ff0000'; // Red color for lose
-      }
+    // Flag to track whether the game has ended
+    let gameOver = false;
 
-      // game over message on the screen
-      const gameOverText = this.add.text(187.5, 332.25, message, {
+    // Handle game over event from the server
+    this.socket.on('gameOver', (message) => {
+      // Check if the game is already over
+      if (!gameOver) {
+        let textColor = '#fff'; // Default color
+
+        // Determine text color based on win/lose message
+        if (message.toLowerCase().includes('win')) {
+          textColor = '#00ff00'; // Green color for win
+        } else if (message.toLowerCase().includes('lost')) {
+          textColor = '#ff0000'; // Red color for lose
+        }
+
+        // Display game over message on the screen
+        const gameOverText = this.add.text(187.5, 332.25, message, {
           font: '18px Arial', // You can change the font here
           fill: textColor,
           wordWrap: { width: 325, useAdvancedWrap: true }
-      });
-      gameOverText.setOrigin(0.5);
+        });
+        gameOverText.setOrigin(0.5);
+
+        // Set flag to indicate game over
+        gameOver = true;
+      }
     });
-  
+
   }
 }
 
-export default ChessBoard;
+export default ChessBoard

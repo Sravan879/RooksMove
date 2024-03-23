@@ -45,7 +45,7 @@ server.listen(PORT, () => {
 
 // Function to handle new socket connection
 function handleNewConnection(socket) {
-  console.log('Player has connected');
+  console.log('Player connected');
   let timer; // Timer for the current player's turn
 
   // Assign a unique player ID to the connected player
@@ -82,8 +82,14 @@ function handleNewConnection(socket) {
     socket.emit('initialGameState', initialState);
   }
 
+  let rookInteractive = true; // Flag to track rook interactivity
+
   // Function to handle moveRook event
   function handleMoveRook(newPosition) {
+    if (!rookInteractive) {
+      return; // Do nothing if the rook is not interactive
+    }
+
     // Identify the current player by their player ID
     const currentPlayer = players.find((p) => p.socket === socket);
     if (currentPlayer && initialState.currentPlayer === currentPlayer.id) {
@@ -105,27 +111,34 @@ function handleNewConnection(socket) {
         // The other player has lost
         const otherPlayer = players.find((p) => p.id !== currentPlayer.id);
         io.to(otherPlayer.socket.id).emit('gameOver', 'You lost! Your opponent has reached the end!');
+        
+        // Set the flag to disable rook interactivity
+        rookInteractive = false;
         return;
       }
     }
   }
+
 
   // Function to start turn timer
   function startTurnTimer() {
     timer = setTimeout(() => {
       // Declare the current player as the loser due to timeout
       const currentPlayer = players.find((p) => p.socket === socket);
-      io.to(currentPlayer.socket.id).emit('gameOver', "Game Over! Time's up! You lost!");
-      
-      // Declare the other player as the winner
       const otherPlayer = players.find((p) => p.id !== currentPlayer.id);
+      
+      // Emit appropriate messages to both players
+      io.to(currentPlayer.socket.id).emit('gameOver', "Game Over! Time's up! You lost!");
       io.to(otherPlayer.socket.id).emit('gameOver', "Congratulations! Your opponent's time ran out. You win!");
+      
+      // Set the flag to disable rook interactivity and hide the squares
+      rookInteractive = false;
     }, turnTimeout);
   }
 
   // Function to handle socket disconnection
   function handleDisconnect() {
-    console.log('Player has disconnected');
+    console.log('Player disconnected');
     // Remove the disconnected player from the list
     const index = players.findIndex((p) => p.id === playerId);
     if (index !== -1) {

@@ -21,7 +21,7 @@ const config = {
 const gameInstance = new Phaser.Game(config);
 
 // Add HTML content as an overlay
-document.querySelector('#app').innerHTML = `
+document.querySelector('#game').innerHTML = `
     <div>
     </div>
 `;
