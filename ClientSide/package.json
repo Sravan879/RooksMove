@@ -1,7 +1,7 @@
 {
   "name": "rook-move",
   "private": true,
-  "version": "20.11.1",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
