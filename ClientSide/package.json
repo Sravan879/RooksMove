@@ -18,5 +18,10 @@
     "socket.io-client": "^4.7.2"
   }
 }
-
-
+{
+  "name": "my-package",
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "jest"
+  }
+}
